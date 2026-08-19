@@ -1,9 +1,1 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
-  "functions": {
-    "api/feed.js": {
-      "maxDuration": 60
-    }
-  }
-}
+{"$schema":"https://openapi.vercel.sh/vercel.json","framework":null,"functions":{"api/feed.js":{"maxDuration":60}}}
