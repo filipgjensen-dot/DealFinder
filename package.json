@@ -1,9 +1,6 @@
 {
-  "name": "dealfinder-v3",
-  "version": "3.0.0",
+  "name": "dealfinder-v3-1",
+  "version": "3.1.0",
   "private": true,
-  "type": "module",
-  "dependencies": {
-    "fast-xml-parser": "^5.2.5"
-  }
+  "type": "module"
 }
