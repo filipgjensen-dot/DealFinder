@@ -3,64 +3,51 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>DealFinder – Find den bedste pris</title>
-  <meta name="description" content="Sammenlign priser og find de bedste tilbud.">
+  <title>DealFinder</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="topbar">
+<header>
   <div class="brand">Deal<span>Finder</span></div>
-  <button id="premiumBtn" class="premium">★ Premium</button>
+  <button id="favBtn">♡ Favoritter <span id="favCount">0</span></button>
 </header>
 
 <main>
   <section class="hero">
-    <p class="eyebrow">SMART PRISSAMMENLIGNING</p>
-    <h1>Find den bedste pris.<br><span>Hver gang.</span></h1>
-    <p class="sub">Søg blandt produkter, sammenlign butikker og se om tilbuddet faktisk er godt.</p>
+    <p class="eyebrow">RIGTIGE PRODUKTER · AFFILIATE-KLAR</p>
+    <h1>Find det rigtige produkt.<br><span>Til den rigtige pris.</span></h1>
+    <p>Søg i rigtige produkter fra Billigelogvvs.dk.</p>
     <div class="search">
-      <input id="searchInput" placeholder="Fx gaming PC, OLED skærm eller AirPods..." autocomplete="off">
+      <input id="q" placeholder="Fx Danfoss, Geberit, batteri, lampe...">
       <button id="searchBtn">Søg</button>
     </div>
-    <div class="chips">
-      <button data-search="gaming pc">Gaming PC</button>
-      <button data-search="OLED skærm">OLED skærm</button>
-      <button data-search="iPhone">iPhone</button>
-      <button data-search="hovedtelefoner">Hovedtelefoner</button>
-    </div>
   </section>
 
-  <section class="stats">
-    <div><b>5.000+</b><small>produkter i demo</small></div>
-    <div><b>20+</b><small>butikker planlagt</small></div>
-    <div><b>24/7</b><small>prisovervågning</small></div>
+  <section class="filters">
+    <select id="category"><option value="">Alle kategorier</option></select>
+    <select id="brand"><option value="">Alle brands</option></select>
+    <select id="sort">
+      <option value="relevance">Mest relevante</option>
+      <option value="price_asc">Laveste pris</option>
+      <option value="price_desc">Højeste pris</option>
+      <option value="name">Navn A-Å</option>
+    </select>
   </section>
 
-  <section class="results">
-    <div class="section-head">
-      <div><h2>Populære tilbud</h2><p id="resultText">Demo-data – klar til rigtige produktfeeds</p></div>
-      <select id="sort">
-        <option value="relevance">Mest relevante</option>
-        <option value="price">Laveste pris</option>
-        <option value="discount">Største rabat</option>
-      </select>
-    </div>
-    <div id="products" class="grid"></div>
+  <section class="summary">
+    <strong id="resultCount">0</strong> produkter fundet
   </section>
+
+  <section id="products" class="grid"></section>
+
+  <div class="pager">
+    <button id="prev">← Forrige</button>
+    <span id="pageInfo"></span>
+    <button id="next">Næste →</button>
+  </div>
 </main>
 
-<div id="modal" class="modal hidden">
-  <div class="modal-card">
-    <button id="closeModal" class="close">×</button>
-    <h2>DealFinder Premium</h2>
-    <p>Få prisalarmer, historik og avancerede filtre.</p>
-    <div class="price">29 kr./md.</div>
-    <button class="primary" id="premiumCta">Kommer snart</button>
-    <small>Betaling og login tilsluttes i næste version.</small>
-  </div>
-</div>
-
-<footer>© 2026 DealFinder · Demo/MVP</footer>
+<footer>DealFinder V2 · Affiliate-links via Partner-Ads</footer>
 <script src="app.js"></script>
 </body>
 </html>

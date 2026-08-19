@@ -1,45 +1,85 @@
-const products=[
-{name:"Lenovo Legion Tower 5",cat:"Gaming PC",price:10999,old:12999,discount:15,store:"Eksempelbutik",icon:"🖥️"},
-{name:"LG UltraGear OLED 27GS95QE",cat:"OLED skærm",price:4999,old:5999,discount:17,store:"Eksempelbutik",icon:"🖥️"},
-{name:"Apple iPhone 16 128GB",cat:"iPhone",price:5999,old:6999,discount:14,store:"Eksempelbutik",icon:"📱"},
-{name:"Sony WH-1000XM6",cat:"Hovedtelefoner",price:2899,old:3499,discount:17,store:"Eksempelbutik",icon:"🎧"},
-{name:"ASUS ROG Gaming PC",cat:"Gaming PC",price:13999,old:15999,discount:13,store:"Eksempelbutik",icon:"🖥️"},
-{name:"Samsung Odyssey OLED G6",cat:"OLED skærm",price:6999,old:7999,discount:13,store:"Eksempelbutik",icon:"🖥️"}
-];
+let all=[], filtered=[], page=1;
+const perPage=24;
+const $=id=>document.getElementById(id);
+const norm=s=>(s||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const money=n=>Number(n||0).toLocaleString("da-DK",{minimumFractionDigits:2,maximumFractionDigits:2})+" kr.";
+const esc=s=>(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const getFavs=()=>JSON.parse(localStorage.getItem("dealfinder_favs")||"[]");
+const saveFavs=x=>{localStorage.setItem("dealfinder_favs",JSON.stringify(x)); $("favCount").textContent=x.length};
 
-const el=id=>document.getElementById(id);
-function render(list=products){
-  el("products").innerHTML=list.map((p,i)=>`
-  <article class="card">
-    <div class="photo">${p.icon}</div>
-    <div class="body">
-      <span class="tag">-${p.discount}%</span>
-      <h3>${p.name}</h3>
-      <div class="store">${p.cat} · ${p.store}</div>
-      <div class="price">${p.price.toLocaleString("da-DK")} kr. <span class="old">${p.old.toLocaleString("da-DK")} kr.</span></div>
-      <div class="actions">
-        <button onclick="alert('Prisalarmer kommer i næste version')">🔔 Prisalarm</button>
-        <button class="go" onclick="alert('Affiliate-link tilsluttes her')">Se tilbud →</button>
+function fillFilters(){
+  const cats=[...new Set(all.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"da"));
+  const brands=[...new Set(all.map(p=>p.brand).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"da"));
+  $("category").innerHTML='<option value="">Alle kategorier</option>'+cats.map(x=>`<option>${esc(x)}</option>`).join("");
+  $("brand").innerHTML='<option value="">Alle brands</option>'+brands.map(x=>`<option>${esc(x)}</option>`).join("");
+}
+
+function apply(){
+  const q=norm($("q").value.trim());
+  const cat=$("category").value;
+  const brand=$("brand").value;
+  filtered=all.filter(p=>{
+    const hay=norm([p.name,p.brand,p.category,p.description,p.ean].join(" "));
+    return (!q||hay.includes(q))&&(!cat||p.category===cat)&&(!brand||p.brand===brand);
+  });
+  const sort=$("sort").value;
+  if(sort==="price_asc") filtered.sort((a,b)=>a.price-b.price);
+  if(sort==="price_desc") filtered.sort((a,b)=>b.price-a.price);
+  if(sort==="name") filtered.sort((a,b)=>a.name.localeCompare(b.name,"da"));
+  page=1;
+  render();
+}
+
+function toggleFav(id){
+  let f=getFavs();
+  f=f.includes(id)?f.filter(x=>x!==id):[...f,id];
+  saveFavs(f);
+  render();
+}
+
+function render(){
+  const favs=getFavs();
+  const start=(page-1)*perPage;
+  const current=filtered.slice(start,start+perPage);
+  $("resultCount").textContent=filtered.length.toLocaleString("da-DK");
+  $("products").innerHTML=current.map(p=>`
+    <article class="card">
+      <div class="photo">${p.image?`<img loading="lazy" src="${esc(p.image)}" alt="${esc(p.name)}">`:"📦"}</div>
+      <div class="body">
+        <div class="tags">
+          ${p.brand?`<span class="tag">${esc(p.brand)}</span>`:""}
+          ${norm(p.stock)==="in stock"?'<span class="tag stock">På lager</span>':""}
+        </div>
+        <h3>${esc(p.name)}</h3>
+        <div class="meta">${esc(p.merchant)}${p.category?" · "+esc(p.category):""}</div>
+        <p class="desc">${esc(p.description)}</p>
+        <div class="price">${money(p.price)}</div>
+        <div class="ship">Fragt: ${money(p.shipping)}${p.delivery?" · "+esc(p.delivery):""}</div>
+        <div class="actions">
+          <button onclick="toggleFav('${esc(p.product_id)}')">${favs.includes(p.product_id)?"♥ Gemt":"♡ Gem"}</button>
+          <a href="${esc(p.affiliate_url)}" target="_blank" rel="nofollow sponsored noopener">Se tilbud →</a>
+        </div>
       </div>
-    </div>
-  </article>`).join("");
+    </article>`).join("") || "<p>Ingen produkter matcher din søgning.</p>";
+  const total=Math.max(1,Math.ceil(filtered.length/perPage));
+  $("pageInfo").textContent=`Side ${page} af ${total}`;
+  $("prev").disabled=page<=1;
+  $("next").disabled=page>=total;
 }
-function search(){
-  const q=el("searchInput").value.toLowerCase().trim();
-  const result=q?products.filter(p=>(p.name+" "+p.cat).toLowerCase().includes(q)):products;
-  el("resultText").textContent=q?`${result.length} resultater for "${q}"`:"Demo-data – klar til rigtige produktfeeds";
-  render(result);
+
+async function init(){
+  const res=await fetch("products.json");
+  all=await res.json();
+  filtered=[...all];
+  fillFilters();
+  saveFavs(getFavs());
+  render();
 }
-el("searchBtn").onclick=search;
-el("searchInput").addEventListener("keydown",e=>{if(e.key==="Enter")search()});
-document.querySelectorAll(".chips button").forEach(b=>b.onclick=()=>{el("searchInput").value=b.dataset.search;search()});
-el("sort").onchange=()=>{
-  let x=[...products];
-  if(el("sort").value==="price")x.sort((a,b)=>a.price-b.price);
-  if(el("sort").value==="discount")x.sort((a,b)=>b.discount-a.discount);
-  render(x);
-};
-el("premiumBtn").onclick=()=>el("modal").classList.remove("hidden");
-el("closeModal").onclick=()=>el("modal").classList.add("hidden");
-el("premiumCta").onclick=()=>alert("Stripe/login tilsluttes, når backend er sat op.");
-render();
+
+$("searchBtn").onclick=apply;
+$("q").addEventListener("keydown",e=>{if(e.key==="Enter")apply()});
+["category","brand","sort"].forEach(id=>$(id).onchange=apply);
+$("prev").onclick=()=>{if(page>1){page--;render();window.scrollTo(0,450)}};
+$("next").onclick=()=>{if(page<Math.ceil(filtered.length/perPage)){page++;render();window.scrollTo(0,450)}};
+$("favBtn").onclick=()=>{const f=getFavs(); filtered=all.filter(p=>f.includes(p.product_id)); page=1; render()};
+init();
